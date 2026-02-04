@@ -1,3 +1,4 @@
+⚠️ Note: This package is under development. API is subject to change.
 
 # **TConstrain: Topology-Constrained Trajectory Inference**
 
@@ -6,7 +7,7 @@ trajectory inference. It’s a preprocessor-like tool to overcome the
 limitations of purely unsupervised methods by allowing researchers to
 incorporate biological prior knowledge—such as time points, known
 differentiation pathways, or experimental perturbations—as topological
-constraints. (**This package is not fully developed.**)
+constraints. 
 
 ## **Why TConstrain?**
 
