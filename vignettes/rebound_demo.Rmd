@@ -1,27 +1,23 @@
 ---
-title: "Solving the Reprogramming Rebound Problem"
+title: "Handling Rebounds with Probabilistic Constraints"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Solving the Reprogramming Rebound Problem}
+  %\VignetteIndexEntry{Handling Rebounds with Probabilistic Constraints}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r, include = FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>"
-)
-
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 library(TConstrain)
 library(igraph)
+library(plotly)
 ```
 
 
-# The Problem: Transcriptomic Rebound
+# The Rebound Scenario
 
-In partial reprogramming, cells often return to a state transcriptionally similar to their start point. Standard unsupervised methods (MST) interpret this similarity as a direct connection, failing to capture the temporal loop.
-
+In partial reprogramming, cells often return to a state transcriptionally similar to their start point. 
 Here, we simulate this scenario with 4 clusters:
 
     Day 0: Start
@@ -48,25 +44,32 @@ mock_dim <- centroids_mock[rep(1:4, each=25), ]
 mock_labels <- rep(c("Day0", "Day3", "Day5", "Day10"), each=25)
 ```
 
-# Solution: Topological Constraints
+# Defining Constraints
 
-We enforce two biological rules:
-
-    Must Link: Day 0 must lead to Day 3.
-
-    Cannot Link: Day 0 cannot directly connect to Day 10.
+We enforce a "Must Link" between Day 0 and Day 3, and a "Cannot Link" between Day 0 and Day 10.
 
 ```{r}
-my_constraints <- data.frame(
+cons <- data.frame(
   from = c("Day0", "Day0"),
-  to =   c("Day3", "Day10"),
+  to = c("Day3", "Day10"),
   type = c("must_link", "cannot_link")
 )
 
-# Run Inference
-traj <- infer_trajectory(mock_dim, mock_labels, constraints = my_constraints)
-
 ```
+
+# Probabilistic Inference
+
+We use probabilistic = TRUE to treat these as Bayesian priors. This allows the data to maintain some influence over the final topology.
+
+```{r}
+traj <- infer_trajectory(mock_dim, mock_labels, 
+                         constraints = cons, 
+                         probabilistic = TRUE, 
+                         prior_strength = 20)
+
+plot(traj$mst, layout=traj$centroids, main="Probabilistic Trajectory")
+```
+
 
 # Result
 

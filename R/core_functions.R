@@ -1,64 +1,71 @@
 #' Compute Constrained Minimum Spanning Tree
 #'
 #' Derives a Minimum Spanning Tree (MST) from cluster centroids while respecting
-#' user-defined topological constraints and temporal penalties.
+#' user-defined topological constraints and temporal penalties. Supports both
+#' hard constraints and soft Bayesian priors.
 #'
 #' @param centroids A numeric matrix of cluster centroids (rows = clusters, cols = dimensions).
 #' @param constraints A data.frame with columns 'from', 'to', and 'type'.
 #'   Type must be either "must_link" or "cannot_link".
 #' @param time_labels A named numeric vector indicating the time point for each cluster.
-#'   Used to penalize edges that move backwards in time.
+#' @param probabilistic Logical. If TRUE, treats constraints as soft priors scaled by
+#'   \code{prior_strength}. If FALSE, enforces constraints with effectively zero or infinite distance.
+#' @param prior_strength Numeric (default 10). The scaling factor for soft priors.
 #'
 #' @return An \code{igraph} object representing the constrained MST.
 #'
 #' @importFrom igraph graph_from_adjacency_matrix mst
 #' @importFrom stats dist
 #' @export
-get_constrained_mst <- function(centroids, constraints = NULL, time_labels = NULL) {
+get_constrained_mst <- function(centroids, constraints = NULL, time_labels = NULL,
+                                probabilistic = FALSE, prior_strength = 10) {
 
-  # Calculate base Euclidean distances
   dist_mat <- as.matrix(stats::dist(centroids))
   cluster_names <- rownames(dist_mat)
 
-  # Apply temporal penalties (soft constraints)
   if (!is.null(time_labels)) {
-    # Vectorized check for time consistency could replace loops for speed in C++,
-    # but R loop is sufficient for cluster-level (N < 100) operations.
     for (i in cluster_names) {
       for (j in cluster_names) {
         if (i == j) next
 
-        # Penalize backward transitions
-        if (!is.na(time_labels[i]) && !is.na(time_labels[j])) {
-          if (time_labels[j] < time_labels[i]) {
-            dist_mat[i, j] <- dist_mat[i, j] * 10
-            dist_mat[j, i] <- dist_mat[j, i] * 10
-          }
+        if (!is.na(time_labels[i]) && !is.na(time_labels[j]) && time_labels[j] < time_labels[i]) {
+          scale_factor <- if (probabilistic) prior_strength else 10
+          dist_mat[i, j] <- dist_mat[i, j] * scale_factor
+          dist_mat[j, i] <- dist_mat[j, i] * scale_factor
         }
       }
     }
   }
 
-  # Apply topological constraints (hard constraints)
   if (!is.null(constraints)) {
-    # Ensure constraint clusters exist in data
     valid_cons <- constraints[constraints$from %in% cluster_names &
                                 constraints$to %in% cluster_names, ]
 
     if (nrow(valid_cons) > 0) {
-      must_link <- valid_cons[valid_cons$type == "must_link", ]
-      cannot_link <- valid_cons[valid_cons$type == "cannot_link", ]
+      for (k in 1:nrow(valid_cons)) {
+        u <- as.character(valid_cons$from[k])
+        v <- as.character(valid_cons$to[k])
+        ctype <- valid_cons$type[k]
 
-      # Enforce connections by minimizing distance
-      if (nrow(must_link) > 0) {
-        dist_mat[cbind(must_link$from, must_link$to)] <- 1e-6
-        dist_mat[cbind(must_link$to, must_link$from)] <- 1e-6
-      }
-
-      # Sever connections by maximizing distance
-      if (nrow(cannot_link) > 0) {
-        dist_mat[cbind(cannot_link$from, cannot_link$to)] <- Inf
-        dist_mat[cbind(cannot_link$to, cannot_link$from)] <- Inf
+        if (probabilistic) {
+          if (ctype == "must_link") {
+            new_dist <- dist_mat[u, v] / prior_strength
+            dist_mat[u, v] <- new_dist
+            dist_mat[v, u] <- new_dist
+          } else if (ctype == "cannot_link") {
+            new_dist <- dist_mat[u, v] * prior_strength
+            dist_mat[u, v] <- new_dist
+            dist_mat[v, u] <- new_dist
+          }
+        } else {
+          if (ctype == "must_link") {
+            dist_mat[u, v] <- 1e-6
+            dist_mat[v, u] <- 1e-6
+          } else if (ctype == "cannot_link") {
+            dist_mat[u, v] <- Inf
+            dist_mat[v, u] <- Inf
+          }
+        }
       }
     }
   }
