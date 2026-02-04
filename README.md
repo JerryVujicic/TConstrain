@@ -10,8 +10,7 @@ constraints. (**This package is not fully developed.**)
 
 ## **Why TConstrain?**
 
-Current state-of-the-art pseudotime methods (e.g., Slingshot, Monocle 3,
-PAGA) rely on transcriptomic similarity to infer developmental time.
+Current state-of-the-art trajectory methods rely on transcriptomic similarity to infer developmental time.
 While powerful, this assumption lack flexibility in several biological
 scenarios:
 
