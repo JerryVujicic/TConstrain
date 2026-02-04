@@ -27,11 +27,11 @@ TConstrain modifies the Minimum Spanning Tree (MST) construction step
 used in standard algorithms. Instead of relying solely on Euclidean
 distance, it accepts a user-defined Constraint Table:
 
-    **Must-Link**: Forces specific clusters to connect (bridging gaps or enforcing time direction).
+**Must-Link**: Forces specific clusters to connect (bridging gaps or enforcing time direction).
 
-    **Cannot-Link**: Forbids connections between transcriptionally similar but biologically distinct states (preventing false loops).
+**Cannot-Link**: Forbids connections between transcriptionally similar but biologically distinct states (preventing false loops).
 
-    **Temporal Penalty**: (Optional) Softly penalizes edges that flow backwards against experimental time labels.
+**Temporal Penalty**: (Optional) Softly penalizes edges that flow backwards against experimental time labels.
 
 ## Installation
 
@@ -44,8 +44,8 @@ devtools::install_github("JerryVujicic/TConstrain")
 
 ## **Potential Future Roadmap**
 
-    **Integration with RNA Velocity**: Future versions will support automated constraint suggestion based on scVelo vector fields.
+**Integration with RNA Velocity**: Future versions will support automated constraint suggestion based on scVelo vector fields.
 
-    **Probabilistic Constraints**: Implementation of Bayesian priors for edge weights, allowing data-driven overriding of weak biological assumptions.
+**Probabilistic Constraints**: Implementation of Bayesian priors for edge weights, allowing data-driven overriding of weak biological assumptions.
 
-    **Interactive Visualization**: Tools to interactively define and inspect topological anchors on reduced dimension plots.
+**Interactive Visualization**: Tools to interactively define and inspect topological anchors on reduced dimension plots.
