@@ -1,0 +1,80 @@
+---
+title: "Solving the Reprogramming Rebound Problem"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Solving the Reprogramming Rebound Problem}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+
+library(TConstrain)
+library(igraph)
+```
+
+
+# The Problem: Transcriptomic Rebound
+
+In partial reprogramming, cells often return to a state transcriptionally similar to their start point. Standard unsupervised methods (MST) interpret this similarity as a direct connection, failing to capture the temporal loop.
+
+Here, we simulate this scenario with 4 clusters:
+
+    Day 0: Start
+
+    Day 3: Transition (Reprogramming)
+
+    Day 5: Reverting
+
+    Day 10: Rebound (Similar to Day 0)
+    
+```{r}
+# Mock Centroids
+centroids_mock <- matrix(c(
+  0, 0,  # Day 0
+  5, 5,  # Day 3
+  5, 0,  # Day 5
+  1, 1   # Day 10 (Physically close to Day 0)
+), ncol = 2, byrow = TRUE)
+rownames(centroids_mock) <- c("Day0", "Day3", "Day5", "Day10")
+
+# Simulate cluster labels for 100 cells
+# (This step is just for the function signature, usually you have real data)
+mock_dim <- centroids_mock[rep(1:4, each=25), ]
+mock_labels <- rep(c("Day0", "Day3", "Day5", "Day10"), each=25)
+```
+
+# Solution: Topological Constraints
+
+We enforce two biological rules:
+
+    Must Link: Day 0 must lead to Day 3.
+
+    Cannot Link: Day 0 cannot directly connect to Day 10.
+
+```{r}
+my_constraints <- data.frame(
+  from = c("Day0", "Day0"),
+  to =   c("Day3", "Day10"),
+  type = c("must_link", "cannot_link")
+)
+
+# Run Inference
+traj <- infer_trajectory(mock_dim, mock_labels, constraints = my_constraints)
+
+```
+
+# Result
+
+```{r}
+# Visualize the resulting MST
+plot(traj$mst, layout=traj$centroids, 
+     main="Constrained Trajectory", 
+     vertex.size=30, vertex.label.color="black")
+```
+
+The resulting edges correctly follow the temporal order: Day0 -> Day3 -> Day5 -> Day10, avoiding the shortcut between Day0 and Day10.
