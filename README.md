@@ -15,11 +15,11 @@ PAGA) rely on transcriptomic similarity to infer developmental time.
 While powerful, this assumption lack flexibility in several biological
 scenarios:
 
-    **Expression Rebound**: Differentiated cells returning to the original state may be incorrectly mapped as "neighbors" to the start state, creating short-circuits in the trajectory.
+**Expression Rebound**: Differentiated cells returning to the original state may be incorrectly mapped as "neighbors" to the start state, creating short-circuits in the trajectory.
 
-    **Convergent Differentiation**: Distinct lineages merging into a similar phenotype may be incorrectly linked.
+**Convergent Differentiation**: Distinct lineages merging into a similar phenotype may be incorrectly linked.
 
-    **Disconnected Time-Points**: Large transcriptional jumps between experimental days can cause unsupervised methods to fragment a continuous lineage.
+**Disconnected Time-Points**: Large transcriptional jumps between experimental days can cause unsupervised methods to fragment a continuous lineage.
 
 ## **How It Works**
 
