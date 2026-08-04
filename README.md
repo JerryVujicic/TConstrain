@@ -1,5 +1,3 @@
-⚠️ Note: This package is under development. API is subject to change.
-
 # **TConstrain: Topology-Constrained Trajectory Inference**
 
 **TConstrain** is an R package for semi-supervised single-cell
