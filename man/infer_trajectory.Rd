@@ -8,27 +8,29 @@ infer_trajectory(
   reduced_dim,
   cluster_labels,
   constraints = NULL,
-  start_cluster = NULL
+  time_labels = NULL,
+  start_cluster = NULL,
+  probabilistic = FALSE,
+  prior_strength = 10,
+  small_eps = 1e-8,
+  large_value = 1e12
 )
 }
 \arguments{
-\item{reduced_dim}{A numeric matrix of coordinates (e.g., PCA, UMAP). Rows are cells, columns are dimensions.}
-
+\item{reduced_dim}{A numeric matrix or data.frame of coordinates (e.g., PCA, UMAP).}
 \item{cluster_labels}{A vector of cluster IDs for each cell.}
-
-\item{constraints}{A data.frame of topological constraints (cols: 'from', 'to', 'type').}
-
-\item{start_cluster}{(Optional) Character string specifying the root cluster.
-If NULL, defaults to the first cluster in constraints or the first endpoint found.}
+\item{constraints}{A data.frame of topological constraints with columns \code{from}, \code{to}, and \code{type}.}
+\item{time_labels}{Optional named numeric vector assigning a time point to each cluster.}
+\item{start_cluster}{Optional character string specifying the root cluster.}
+\item{probabilistic}{Logical. If TRUE, uses soft Bayesian priors.}
+\item{prior_strength}{Numeric strength of the prior or penalty; must be greater than 1.}
+\item{small_eps}{Finite positive value used for hard \code{must_link} constraints.}
+\item{large_value}{Finite positive value used for hard \code{cannot_link} constraints.}
 }
 \value{
-A list containing:
-\item{centroids}{Matrix of cluster centroids.}
-\item{mst}{The computed Minimum Spanning Tree (igraph object).}
-\item{lineages}{A named list of character vectors, where each vector is a sequence of clusters.}
+A list containing \code{centroids}, \code{mst}, \code{lineages}, and \code{root}.
 }
 \description{
-A high-level wrapper to infer lineages and pseudotime. It calculates centroids
-from reduced dimension coordinates, constructs a constrained MST, and identifies
-lineage paths from a root cluster.
+A high-level wrapper that calculates cluster centroids, constructs a constrained
+MST with optional temporal penalties, and identifies lineage paths from a root cluster.
 }
