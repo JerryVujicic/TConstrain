@@ -24,16 +24,10 @@
 #'   hard `must_link`. Defaults to `1e-8`.
 #' @param large_value Finite positive number used as the effective distance for a
 #'   hard `cannot_link`. Defaults to `1e12`.
-#' @param return_format Character: either `"igraph"` (default) to return an
-#'   `igraph` object, or `"edgelist"` to return a tidy edge list with columns
-#'   `from`, `to`, and `weight` describing the MST edges.
-#'
-#' @return Either an `igraph` object (when `return_format = "igraph"`) or
-#'   an edge list data.frame (when `return_format = "edgelist"`).
-#'
-#' @seealso get_constrained_mst_tidy for a wrapper that accepts tibbles and an
-#'   explicit `id_col`.
-#'
+#' @param return_format Character: either `"igraph"` (default) or `"edgelist"`.
+#' @return Either an `igraph` object or an edge list data.frame with columns
+#'   `from`, `to`, and `weight`.
+#' @seealso get_constrained_mst_tidy
 #' @importFrom igraph graph_from_adjacency_matrix mst E V
 #' @importFrom stats dist
 #' @export
@@ -55,28 +49,17 @@ get_constrained_mst <- function(centroids,
   }
   centroids <- as.matrix(centroids)
   if (!is.numeric(centroids)) stop("'centroids' must be numeric.")
-
   cluster_names <- rownames(centroids)
   if (is.null(cluster_names) || any(cluster_names == "")) {
     stop("Row names of 'centroids' must be non-empty cluster identifiers.")
   }
-  if (!is.logical(probabilistic) || length(probabilistic) != 1) {
-    stop("'probabilistic' must be a single logical value (TRUE/FALSE).")
-  }
-  if (!is.numeric(prior_strength) || length(prior_strength) != 1 || prior_strength <= 1) {
-    stop("'prior_strength' must be a single numeric value > 1.")
-  }
-  if (!is.numeric(small_eps) || length(small_eps) != 1 || small_eps <= 0) {
-    stop("'small_eps' must be a positive numeric scalar.")
-  }
-  if (!is.numeric(large_value) || length(large_value) != 1 || large_value <= 0) {
-    stop("'large_value' must be a positive numeric scalar.")
-  }
+  if (!is.logical(probabilistic) || length(probabilistic) != 1) stop("'probabilistic' must be a single logical value (TRUE/FALSE).")
+  if (!is.numeric(prior_strength) || length(prior_strength) != 1 || prior_strength <= 1) stop("'prior_strength' must be a single numeric value > 1.")
+  if (!is.numeric(small_eps) || length(small_eps) != 1 || small_eps <= 0) stop("'small_eps' must be a positive numeric scalar.")
+  if (!is.numeric(large_value) || length(large_value) != 1 || large_value <= 0) stop("'large_value' must be a positive numeric scalar.")
 
   dist_mat <- as.matrix(stats::dist(centroids))
-  if (!is.matrix(dist_mat) || nrow(dist_mat) != ncol(dist_mat)) {
-    stop("Failed to compute a square distance matrix.")
-  }
+  if (!is.matrix(dist_mat) || nrow(dist_mat) != ncol(dist_mat)) stop("Failed to compute a square distance matrix.")
   n <- nrow(dist_mat)
   colnames(dist_mat) <- rownames(dist_mat) <- cluster_names
 
@@ -85,13 +68,9 @@ get_constrained_mst <- function(centroids,
       stop("'time_labels' must be a named numeric vector with names matching cluster IDs (rownames of centroids).")
     }
     unknown_time_names <- setdiff(names(time_labels), cluster_names)
-    if (length(unknown_time_names) > 0) {
-      warning(sprintf("Ignoring %d time labels with unknown cluster IDs.", length(unknown_time_names)))
-    }
+    if (length(unknown_time_names) > 0) warning(sprintf("Ignoring %d time labels with unknown cluster IDs.", length(unknown_time_names)))
     times_vec <- time_labels[cluster_names]
-    time_back <- outer(times_vec, times_vec, FUN = function(ti, tj) {
-      ifelse(is.na(ti) | is.na(tj), FALSE, tj < ti)
-    })
+    time_back <- outer(times_vec, times_vec, FUN = function(ti, tj) ifelse(is.na(ti) | is.na(tj), FALSE, tj < ti))
     scale_factor <- if (probabilistic) prior_strength else max(prior_strength, 10)
     multiplier <- matrix(1, nrow = n, ncol = n)
     multiplier[time_back] <- scale_factor
@@ -100,45 +79,26 @@ get_constrained_mst <- function(centroids,
   }
 
   if (!is.null(constraints)) {
-    if (!is.data.frame(constraints)) {
-      stop("'constraints' must be a data.frame with columns 'from', 'to', 'type'.")
-    }
+    if (!is.data.frame(constraints)) stop("'constraints' must be a data.frame with columns 'from', 'to', 'type'.")
     req_cols <- c("from", "to", "type")
-    if (!all(req_cols %in% colnames(constraints))) {
-      stop(paste0("'constraints' must contain columns: ", paste(req_cols, collapse = ", ")))
-    }
-
+    if (!all(req_cols %in% colnames(constraints))) stop(paste0("'constraints' must contain columns: ", paste(req_cols, collapse = ", ")))
     constraints$from <- as.character(constraints$from)
     constraints$to <- as.character(constraints$to)
     constraints$type <- as.character(constraints$type)
-
     keep_idx <- which(constraints$from %in% cluster_names & constraints$to %in% cluster_names)
-    if (length(keep_idx) < nrow(constraints)) {
-      warning(sprintf("Dropping %d constraints with unknown cluster IDs.", nrow(constraints) - length(keep_idx)))
-    }
+    if (length(keep_idx) < nrow(constraints)) warning(sprintf("Dropping %d constraints with unknown cluster IDs.", nrow(constraints) - length(keep_idx)))
     valid_cons <- constraints[keep_idx, , drop = FALSE]
-
     allowed_types <- c("must_link", "cannot_link")
     bad_types <- setdiff(unique(valid_cons$type), allowed_types)
-    if (length(bad_types) > 0) {
-      stop(sprintf("Unknown constraint types found: %s. Allowed: %s",
-                   paste(bad_types, collapse = ", "), paste(allowed_types, collapse = ", ")))
-    }
-
+    if (length(bad_types) > 0) stop(sprintf("Unknown constraint types found: %s. Allowed: %s", paste(bad_types, collapse = ", "), paste(allowed_types, collapse = ", ")))
     if (nrow(valid_cons) > 0) {
-      pair_key <- paste(pmin(valid_cons$from, valid_cons$to),
-                        pmax(valid_cons$from, valid_cons$to), sep = "--")
+      pair_key <- paste(pmin(valid_cons$from, valid_cons$to), pmax(valid_cons$from, valid_cons$to), sep = "--")
       duplicate_pairs <- unique(pair_key[duplicated(pair_key)])
-      if (length(duplicate_pairs) > 0) {
-        warning(sprintf("Duplicate constraint pairs found; later rows override earlier rows: %s",
-                        paste(duplicate_pairs, collapse = ", ")))
-      }
-
+      if (length(duplicate_pairs) > 0) warning(sprintf("Duplicate constraint pairs found; later rows override earlier rows: %s", paste(duplicate_pairs, collapse = ", ")))
       for (k in seq_len(nrow(valid_cons))) {
         u <- valid_cons$from[k]
         v <- valid_cons$to[k]
         ctype <- valid_cons$type[k]
-
         if (probabilistic) {
           if (ctype == "must_link") {
             dist_mat[u, v] <- dist_mat[u, v] / prior_strength
@@ -165,13 +125,10 @@ get_constrained_mst <- function(centroids,
     warning("Some distances were non-finite (NA/Inf) and were replaced by 'large_value'. This may disconnect the graph.")
   }
   dist_mat <- (dist_mat + t(dist_mat)) / 2
-
   g <- igraph::graph_from_adjacency_matrix(dist_mat, mode = "undirected", weighted = TRUE, diag = FALSE)
   mst_graph <- igraph::mst(g)
   igraph::graph_attr(mst_graph, "modified_distance_matrix") <- dist_mat
-
   if (return_format == "igraph") return(mst_graph)
-
   edges <- igraph::as_data_frame(mst_graph, what = "edges")
   edges <- edges[, c("from", "to", "weight"), drop = FALSE]
   return(edges)
@@ -199,23 +156,6 @@ get_constrained_mst_tidy <- function(data, id_col = "id", constraints = NULL,
                       large_value = large_value, return_format = return_format)
 }
 
-#' Get Cluster Centroids from Single-Cell Data
-#'
-#' @param data A numeric matrix or data.frame of coordinates (cells x dims).
-#' @param labels A vector of cluster labels corresponding to cells.
-#' @return A matrix of cluster centroids (clusters x dims).
-#' @export
-get_centroids <- function(data, labels) {
-  data <- as.matrix(data)
-  unique_clusters <- sort(unique(as.character(labels)))
-  centroids <- t(sapply(unique_clusters, function(cl) {
-    subset_data <- data[labels == cl, , drop = FALSE]
-    colMeans(subset_data)
-  }))
-  rownames(centroids) <- unique_clusters
-  return(centroids)
-}
-
 #' Run simple simulated examples and checks to validate behaviour
 #'
 #' @param verbose Logical; if TRUE prints intermediate results.
@@ -227,24 +167,13 @@ run_constrained_mst_checks <- function(verbose = TRUE) {
   cent <- matrix(rnorm(10), nrow = 5)
   rownames(cent) <- paste0("C", 1:5)
   times <- c(C1 = 0, C2 = 1, C3 = 2, C4 = 1, C5 = 3)
-  cons <- data.frame(from = c("C1", "C4"), to = c("C2", "C5"),
-                     type = c("must_link", "cannot_link"), stringsAsFactors = FALSE)
-
-  mst_hard <- get_constrained_mst(cent, constraints = cons, time_labels = times,
-                                  probabilistic = FALSE, prior_strength = 5,
-                                  return_format = "edgelist")
+  cons <- data.frame(from = c("C1", "C4"), to = c("C2", "C5"), type = c("must_link", "cannot_link"), stringsAsFactors = FALSE)
+  mst_hard <- get_constrained_mst(cent, constraints = cons, time_labels = times, probabilistic = FALSE, prior_strength = 5, return_format = "edgelist")
   if (verbose) print(mst_hard)
-  e_names <- apply(mst_hard[, c("from", "to")], 1,
-                   function(x) paste(sort(x), collapse = "--"))
-  if (!any(e_names == "C1--C2")) {
-    stop("Hard must_link failed: edge C1--C2 not present in MST.")
-  }
-  mst_soft_graph <- get_constrained_mst(cent, constraints = cons, time_labels = times,
-                                        probabilistic = TRUE, prior_strength = 10,
-                                        return_format = "igraph")
-  if (!inherits(mst_soft_graph, "igraph")) {
-    stop("Expected igraph when return_format = 'igraph'.")
-  }
+  e_names <- apply(mst_hard[, c("from", "to")], 1, function(x) paste(sort(x), collapse = "--"))
+  if (!any(e_names == "C1--C2")) stop("Hard must_link failed: edge C1--C2 not present in MST.")
+  mst_soft_graph <- get_constrained_mst(cent, constraints = cons, time_labels = times, probabilistic = TRUE, prior_strength = 10, return_format = "igraph")
+  if (!inherits(mst_soft_graph, "igraph")) stop("Expected igraph when return_format = 'igraph'.")
   if (verbose) message("All checks passed.")
   invisible(TRUE)
 }
