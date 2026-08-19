@@ -4,21 +4,31 @@
 \alias{get_constrained_mst}
 \title{Compute Constrained Minimum Spanning Tree}
 \usage{
-get_constrained_mst(centroids, constraints = NULL, time_labels = NULL)
+get_constrained_mst(
+  centroids,
+  constraints = NULL,
+  time_labels = NULL,
+  probabilistic = FALSE,
+  prior_strength = 10,
+  small_eps = 1e-8,
+  large_value = 1e12,
+  return_format = c("igraph", "edgelist")
+)
 }
 \arguments{
-\item{centroids}{A numeric matrix of cluster centroids (rows = clusters, cols = dimensions).}
-
-\item{constraints}{A data.frame with columns 'from', 'to', and 'type'.
-Type must be either "must_link" or "cannot_link".}
-
-\item{time_labels}{A named numeric vector indicating the time point for each cluster.
-Used to penalize edges that move backwards in time.}
+\item{centroids}{A numeric matrix or data.frame/tibble of cluster centroids. Row names are cluster IDs.}
+\item{constraints}{Optional data.frame with columns \code{from}, \code{to}, and \code{type}.}
+\item{time_labels}{Optional named numeric vector. Backward-in-time edges are penalized.}
+\item{probabilistic}{Logical. If TRUE, constraints and temporal penalties are soft priors.}
+\item{prior_strength}{Numeric strength of the soft prior or temporal penalty; must be greater than 1.}
+\item{small_eps}{Finite positive effective distance for hard \code{must_link}.}
+\item{large_value}{Finite positive effective distance for hard \code{cannot_link} and non-finite distances.}
+\item{return_format}{Either \code{"igraph"} or \code{"edgelist"}.}
 }
 \value{
-An \code{igraph} object representing the constrained MST.
+An igraph object when \code{return_format = "igraph"}, or an edge-list data.frame with \code{from}, \code{to}, and \code{weight} columns when \code{return_format = "edgelist"}.
 }
 \description{
-Derives a Minimum Spanning Tree (MST) from cluster centroids while respecting
-user-defined topological constraints and temporal penalties.
+Derives a Minimum Spanning Tree from cluster centroids while respecting
+user-defined topological constraints and optional temporal penalties.
 }
