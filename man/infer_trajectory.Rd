@@ -21,7 +21,7 @@ infer_trajectory(
 \item{cluster_labels}{A vector of cluster IDs for each cell.}
 \item{constraints}{A data.frame of topological constraints with columns \code{from}, \code{to}, and \code{type}.}
 \item{time_labels}{Optional named numeric vector assigning a time point to each cluster.}
-\item{start_cluster}{Optional character string specifying the root cluster.}
+\item{start_cluster}{Optional character string specifying the root cluster. If omitted, a unique cluster with the earliest known time label is used; otherwise a root must be supplied.}
 \item{probabilistic}{Logical. If TRUE, uses soft Bayesian priors.}
 \item{prior_strength}{Numeric strength of the prior or penalty; must be greater than 1.}
 \item{small_eps}{Finite positive value used for hard \code{must_link} constraints.}
@@ -33,4 +33,5 @@ A list containing \code{centroids}, \code{mst}, \code{lineages}, and \code{root}
 \description{
 A high-level wrapper that calculates cluster centroids, constructs a constrained
 MST with optional temporal penalties, and identifies lineage paths from a root cluster.
+Constraint-table order is not used to choose the root.
 }

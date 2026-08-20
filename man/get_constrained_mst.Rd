@@ -18,9 +18,9 @@ get_constrained_mst(
 \arguments{
 \item{centroids}{A numeric matrix or data.frame/tibble of cluster centroids. Row names are cluster IDs.}
 \item{constraints}{Optional data.frame with columns \code{from}, \code{to}, and \code{type}.}
-\item{time_labels}{Optional named numeric vector. Backward-in-time edges are penalized.}
-\item{probabilistic}{Logical. If TRUE, constraints and temporal penalties are soft priors.}
-\item{prior_strength}{Numeric strength of the soft prior or temporal penalty; must be greater than 1.}
+\item{time_labels}{Optional named numeric vector. Edges between clusters with different known time labels receive a symmetric penalty.}
+\item{probabilistic}{Logical. If TRUE, constraints and temporal penalties are soft priors; otherwise constraints are hard rules and temporal penalties remain finite.}
+\item{prior_strength}{Numeric strength of the soft prior or base temporal penalty; must be greater than 1. The temporal multiplier is \code{(1 + scale_factor) / 2}, preserving the undirected edge weights used by earlier releases.}
 \item{small_eps}{Finite positive effective distance for hard \code{must_link}.}
 \item{large_value}{Finite positive effective distance for hard \code{cannot_link} and non-finite distances.}
 \item{return_format}{Either \code{"igraph"} or \code{"edgelist"}.}
@@ -29,6 +29,8 @@ get_constrained_mst(
 An igraph object when \code{return_format = "igraph"}, or an edge-list data.frame with \code{from}, \code{to}, and \code{weight} columns when \code{return_format = "edgelist"}.
 }
 \description{
-Derives a Minimum Spanning Tree from cluster centroids while respecting
-user-defined topological constraints and optional temporal penalties.
+Derives an undirected Minimum Spanning Tree from cluster centroids while
+respecting user-defined topological constraints and optional symmetric temporal
+penalties. Time labels discourage edges between different known time points;
+they do not orient edges.
 }

@@ -1,11 +1,13 @@
 Package: TConstrain
-Title: What the Package Does (One Line, Title Case)
+Title: Topology-Constrained Trajectory Inference
 Version: 0.0.0.9000
 Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"))
-Description: What the package does (one paragraph).
-License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
-    license
+    person("Xianzhe", "Hu", email = "xianzhe88888@gmail.com", role = c("aut", "cre"))
+Description: Constructs topology-constrained minimum spanning trees from
+    cluster centroids for semi-supervised single-cell trajectory inference.
+    Supports hard must-link and cannot-link relationships, plus soft priors
+    including symmetric penalties for edges between different known time labels.
+License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3

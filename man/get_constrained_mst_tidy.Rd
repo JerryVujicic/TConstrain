@@ -20,9 +20,9 @@ get_constrained_mst_tidy(
 \item{data}{A data.frame or tibble containing centroid coordinates and an ID column.}
 \item{id_col}{Name of the column containing cluster IDs.}
 \item{constraints}{Optional topological constraints.}
-\item{time_labels}{Optional named numeric time labels.}
+\item{time_labels}{Optional named numeric time labels. Different known labels receive a symmetric edge penalty.}
 \item{probabilistic}{Logical selecting soft or hard constraint handling.}
-\item{prior_strength}{Strength of soft priors or temporal penalties.}
+\item{prior_strength}{Strength of soft priors or the base temporal penalty.}
 \item{small_eps}{Effective distance for hard \code{must_link} constraints.}
 \item{large_value}{Effective distance for hard \code{cannot_link} constraints.}
 \item{return_format}{Either \code{"igraph"} or \code{"edgelist"}.}
