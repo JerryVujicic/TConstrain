@@ -11,4 +11,4 @@ get_centroids(data, labels)
 \item{labels}{A vector of cluster labels corresponding to cells.}
 }
 \value{A matrix of cluster centroids with one row per cluster.}
-\description{Calculates the mean coordinate of each cluster.}
+\description{Calculates the mean coordinate of each cluster. Cluster labels with numeric suffixes use natural ordering, so \code{C2} precedes \code{C10}.}

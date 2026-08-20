@@ -1,8 +1,9 @@
 #' Compute Constrained Minimum Spanning Tree (validated, configurable, tidy-friendly)
 #'
-#' Builds a Minimum Spanning Tree (MST) on cluster centroids while honoring
-#' temporal directionality and user-provided topological constraints. Constraints
-#' can be applied as hard rules or as soft (probabilistic) priors.
+#' Derives an undirected Minimum Spanning Tree from cluster centroids while
+#' respecting user-defined topological constraints and optional symmetric
+#' temporal penalties. Time labels discourage links between different known time
+#' points but do not orient edges.
 #'
 #' @param centroids A numeric matrix or data.frame/tibble of cluster centroids
 #'   (rows = clusters, columns = dimensions). **Row names must be cluster IDs**
@@ -10,16 +11,18 @@
 #' @param constraints Optional data.frame (or tibble) with columns: `from`,
 #'   `to`, and `type`. `type` must be one of `"must_link"` or `"cannot_link"`.
 #' @param time_labels Optional **named** numeric vector. Names must match the
-#'   row names of `centroids`. If provided, edges that go "back in time"
-#'   (from a cluster at time t1 to a cluster at an earlier time t0) will be
-#'   penalized. NA times are treated as "unknown" and do not trigger penalties.
+#'   row names of `centroids`. If provided, edges joining clusters with different
+#'   known time labels receive a symmetric penalty. NA times are treated as
+#'   "unknown" and do not trigger penalties.
 #' @param probabilistic Logical scalar. If TRUE, constraints and temporal
 #'   penalties are applied as *soft priors* (distances are scaled by
-#'   `prior_strength`). If FALSE, constraints are enforced as hard rules
-#'   using `small_eps` and `large_value`.
+#'   `prior_strength`). If FALSE, constraints are enforced as hard rules using
+#'   `small_eps` and `large_value`. Temporal penalties remain finite in both
+#'   modes.
 #' @param prior_strength Numeric > 1. Strength of prior/penalty used when
-#'   `probabilistic = TRUE`; also used as the base scale for the non-probabilistic
-#'   temporal penalty (for consistent behaviour).
+#'   `probabilistic = TRUE`; also used as the base scale for the temporal
+#'   penalty. The temporal multiplier is `(1 + scale_factor) / 2`, which
+#'   preserves the undirected edge weights produced by earlier releases.
 #' @param small_eps Finite positive number used as the effective distance for a
 #'   hard `must_link`. Defaults to `1e-8`.
 #' @param large_value Finite positive number used as the effective distance for a
@@ -28,8 +31,6 @@
 #' @return Either an `igraph` object or an edge list data.frame with columns
 #'   `from`, `to`, and `weight`.
 #' @seealso get_constrained_mst_tidy
-#' @importFrom igraph graph_from_adjacency_matrix mst E V
-#' @importFrom stats dist
 #' @export
 get_constrained_mst <- function(centroids,
                                 constraints = NULL,
@@ -70,10 +71,15 @@ get_constrained_mst <- function(centroids,
     unknown_time_names <- setdiff(names(time_labels), cluster_names)
     if (length(unknown_time_names) > 0) warning(sprintf("Ignoring %d time labels with unknown cluster IDs.", length(unknown_time_names)))
     times_vec <- time_labels[cluster_names]
-    time_back <- outer(times_vec, times_vec, FUN = function(ti, tj) ifelse(is.na(ti) | is.na(tj), FALSE, tj < ti))
+    time_differs <- outer(
+      times_vec,
+      times_vec,
+      FUN = function(ti, tj) !is.na(ti) & !is.na(tj) & ti != tj
+    )
     scale_factor <- if (probabilistic) prior_strength else max(prior_strength, 10)
+    temporal_multiplier <- (1 + scale_factor) / 2
     multiplier <- matrix(1, nrow = n, ncol = n)
-    multiplier[time_back] <- scale_factor
+    multiplier[time_differs] <- temporal_multiplier
     diag(multiplier) <- 1
     dist_mat <- dist_mat * multiplier
   }
@@ -174,6 +180,48 @@ run_constrained_mst_checks <- function(verbose = TRUE) {
   if (!any(e_names == "C1--C2")) stop("Hard must_link failed: edge C1--C2 not present in MST.")
   mst_soft_graph <- get_constrained_mst(cent, constraints = cons, time_labels = times, probabilistic = TRUE, prior_strength = 10, return_format = "igraph")
   if (!inherits(mst_soft_graph, "igraph")) stop("Expected igraph when return_format = 'igraph'.")
+
+  temporal_centroids <- rbind(C1 = c(0, 0), C2 = c(2, 0), C3 = c(4, 0))
+  temporal_graph <- get_constrained_mst(
+    temporal_centroids,
+    time_labels = c(C1 = 0, C2 = 1, C3 = 1),
+    probabilistic = TRUE,
+    prior_strength = 10
+  )
+  temporal_distances <- igraph::graph_attr(temporal_graph, "modified_distance_matrix")
+  expected_multiplier <- (1 + 10) / 2
+  if (!isTRUE(all.equal(temporal_distances, t(temporal_distances)))) {
+    stop("Temporal penalties must produce a symmetric distance matrix.")
+  }
+  if (!isTRUE(all.equal(temporal_distances["C1", "C2"], 2 * expected_multiplier))) {
+    stop("Temporal penalty did not apply the expected symmetric multiplier.")
+  }
+  if (!isTRUE(all.equal(temporal_distances["C2", "C3"], 2))) {
+    stop("Clusters with equal time labels should not receive a temporal penalty.")
+  }
+
+  ordered_centroids <- get_centroids(
+    matrix(c(0, 0, 1, 1, 2, 2), ncol = 2, byrow = TRUE),
+    c("C10", "C2", "C1")
+  )
+  if (!identical(rownames(ordered_centroids), c("C1", "C2", "C10"))) {
+    stop("Cluster centroids should use natural ordering for numeric suffixes.")
+  }
+
+  inferred_root <- infer_trajectory(cent, rownames(cent), time_labels = times)$root
+  if (!identical(inferred_root, "C1")) {
+    stop("A unique earliest time label should determine the inferred root.")
+  }
+  constraints_do_not_define_root <- tryCatch(
+    {
+      infer_trajectory(cent, rownames(cent), constraints = cons)
+      FALSE
+    },
+    error = function(error) grepl("start_cluster", conditionMessage(error), fixed = TRUE)
+  )
+  if (!isTRUE(constraints_do_not_define_root)) {
+    stop("Constraint-table order must not determine the inferred root.")
+  }
   if (verbose) message("All checks passed.")
   invisible(TRUE)
 }

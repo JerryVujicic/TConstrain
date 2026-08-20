@@ -28,7 +28,7 @@ used in standard algorithms. It offers two modes of supervision:
 
 Use this when you are certain about the biology.
 
-**Must-Link**: Forces specific clusters to connect (bridging gaps or enforcing time direction).
+**Must-Link**: Forces specific clusters to connect, bridging known gaps.
 
 **Cannot-Link**: Forbids connections between transcriptionally similar but biologically distinct states (preventing false loops).
 
@@ -41,6 +41,15 @@ Use this when you have a hypothesis but allow override by the data. Instead of f
 **Discouragement**: Distances are multiplied by a prior_strength factor.
 
 If the data suggests two clusters are radically different, the MST will still refuse to link them, avoiding artifacts.
+
+### **Temporal Labels**
+
+Supplying `time_labels` discourages an MST edge between clusters with different
+known time labels. The MST is undirected, so this is a symmetric penalty rather
+than an edge direction: it reduces temporal short-circuits but does not orient
+the graph. For lineage reporting, specify `start_cluster`; if it is omitted,
+`infer_trajectory()` uses a uniquely earliest known time label and otherwise
+asks you to choose the root explicitly.
 
 ## Installation
 

@@ -55,6 +55,8 @@ cons <- data.frame(
   type = c("must_link", "cannot_link")
 )
 
+times <- c(Day0 = 0, Day3 = 3, Day5 = 5, Day10 = 10)
+
 ```
 
 # Probabilistic Inference
@@ -64,6 +66,7 @@ We use probabilistic = TRUE to treat these as Bayesian priors. This allows the d
 ```{r}
 traj <- infer_trajectory(mock_dim, mock_labels, 
                          constraints = cons, 
+                         time_labels = times,
                          probabilistic = TRUE, 
                          prior_strength = 20)
 
@@ -80,4 +83,7 @@ plot(traj$mst, layout=traj$centroids,
      vertex.size=30, vertex.label.color="black")
 ```
 
-The resulting edges correctly follow the temporal order: Day0 -> Day3 -> Day5 -> Day10, avoiding the shortcut between Day0 and Day10.
+The time labels discourage direct links between different observed time points,
+while the cannot-link prior discourages the Day0-to-Day10 shortcut. These are
+undirected penalties; the reported paths are rooted at Day0 because it is the
+unique earliest known time label.
