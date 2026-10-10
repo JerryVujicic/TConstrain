@@ -3,11 +3,21 @@
 \name{plot_constraints_interactive}
 \alias{plot_constraints_interactive}
 \title{Interactive Visualization of Topological Constraints}
-\usage{plot_constraints_interactive(reduced_dim, cluster_labels, constraints = NULL)}
-\arguments{
-\item{reduced_dim}{A matrix or data.frame of reduced-dimension coordinates with at least two columns.}
-\item{cluster_labels}{A vector of cluster labels.}
-\item{constraints}{Optional data.frame with columns \code{from}, \code{to}, and \code{type}.}
+\usage{
+plot_constraints_interactive(reduced_dim, cluster_labels, constraints = NULL)
 }
-\value{A plotly object.}
-\description{Plots cells and cluster centroids and overlays user-specified must-link and cannot-link constraints.}
+\arguments{
+\item{reduced_dim}{A matrix or data.frame of coordinates (rows=cells, cols=dims).}
+
+\item{cluster_labels}{A vector of cluster labels.}
+
+\item{constraints}{A data.frame of constraints (cols: from, to, type).}
+}
+\value{
+A plotly object.
+}
+\description{
+Visualizes the reduced dimension plot with overlaid user constraints.
+Useful for verifying "Must Link" and "Cannot Link" logic before inference.
+Accepts both matrix and data.frame/tibble inputs.
+}

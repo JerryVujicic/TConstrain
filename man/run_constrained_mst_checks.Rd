@@ -2,8 +2,16 @@
 % Please edit documentation in R/core_functions.R
 \name{run_constrained_mst_checks}
 \alias{run_constrained_mst_checks}
-\title{Run Simulated Constrained MST Checks}
-\usage{run_constrained_mst_checks(verbose = TRUE)}
-\arguments{\item{verbose}{Logical; if TRUE, prints intermediate results.}}
-\value{Returns \code{TRUE} invisibly when all checks pass; otherwise stops with an error.}
-\description{Runs a small simulated validation of hard and probabilistic constrained MST behaviour.}
+\title{Run deterministic package smoke checks}
+\usage{
+run_constrained_mst_checks(verbose = TRUE)
+}
+\arguments{
+\item{verbose}{Logical; whether to print a success message.}
+}
+\value{
+TRUE invisibly on success. Does not change the random number state.
+}
+\description{
+Run deterministic package smoke checks
+}

@@ -1,0 +1,2 @@
+"replicates","dimensions","clusters","mean_edge_brier","uniform_prior_brier","credible_set_90_coverage","mean_map_true_edge_recall"
+400,2,4,0.195742617175534,0.25,0.915,0.6875

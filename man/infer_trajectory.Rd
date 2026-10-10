@@ -2,7 +2,7 @@
 % Please edit documentation in R/wrappers.R
 \name{infer_trajectory}
 \alias{infer_trajectory}
-\title{Infer Trajectory with Topological Constraints}
+\title{Infer a rooted cluster topology with exact or probabilistic constraints}
 \usage{
 infer_trajectory(
   reduced_dim,
@@ -12,26 +12,48 @@ infer_trajectory(
   start_cluster = NULL,
   probabilistic = FALSE,
   prior_strength = 10,
-  small_eps = 1e-8,
-  large_value = 1e12
+  small_eps = 1e-08,
+  large_value = 1e+12,
+  likelihood_scale = 1,
+  time_strength = 0,
+  time_scale = 1,
+  hard_constraints = NULL
 )
 }
 \arguments{
-\item{reduced_dim}{A numeric matrix or data.frame of coordinates (e.g., PCA, UMAP).}
-\item{cluster_labels}{A vector of cluster IDs for each cell.}
-\item{constraints}{A data.frame of topological constraints with columns \code{from}, \code{to}, and \code{type}.}
-\item{time_labels}{Optional named numeric vector assigning a time point to each cluster.}
-\item{start_cluster}{Optional character string specifying the root cluster. If omitted, a unique cluster with the earliest known time label is used; otherwise a root must be supplied.}
-\item{probabilistic}{Logical. If TRUE, uses soft Bayesian priors.}
-\item{prior_strength}{Numeric strength of the prior or penalty; must be greater than 1.}
-\item{small_eps}{Finite positive value used for hard \code{must_link} constraints.}
-\item{large_value}{Finite positive value used for hard \code{cannot_link} constraints.}
+\item{reduced_dim}{Numeric finite cells by dimensions coordinates.}
+
+\item{cluster_labels}{One cluster ID per cell.}
+
+\item{constraints}{Data.frame with from, to, type; hard rules when
+probabilistic is FALSE and soft rules otherwise.}
+
+\item{time_labels}{Named numeric times. NA means unknown.}
+
+\item{start_cluster}{Explicit root ID. Otherwise use a unique earliest known
+time. A single cluster is its own root.}
+
+\item{probabilistic}{Single nonmissing logical. TRUE returns a posterior MAP tree.}
+
+\item{prior_strength}{Finite number >= 1; soft tree-prior weight ratio.}
+
+\item{small_eps}{Deprecated positive finite compatibility argument, ignored.}
+
+\item{large_value}{Deprecated positive finite compatibility argument, ignored.}
+
+\item{likelihood_scale}{Fixed positive Gaussian increment standard deviation.}
+
+\item{time_strength}{Nonnegative absolute time-gap penalty; default 0.}
+
+\item{time_scale}{Positive divisor for time units.}
+
+\item{hard_constraints}{Additional exact constraints, also available in soft mode.}
 }
 \value{
-A list containing \code{centroids}, \code{mst}, \code{lineages}, and \code{root}.
+List with centroids, mst, lineages, root, audit and posterior (NULL in
+hard mode). Lineages are cluster paths, not cell pseudotimes. Paths are
+extracted without optimization weights, which may be negative log scores.
 }
 \description{
-A high-level wrapper that calculates cluster centroids, constructs a constrained
-MST with optional temporal penalties, and identifies lineage paths from a root cluster.
-Constraint-table order is not used to choose the root.
+Infer a rooted cluster topology with exact or probabilistic constraints
 }

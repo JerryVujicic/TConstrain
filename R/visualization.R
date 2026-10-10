@@ -1,3 +1,8 @@
+#' @importFrom utils globalVariables
+NULL
+
+utils::globalVariables(c("Dim1", "Dim2", "Cluster", "x", "y", "xend", "yend"))
+
 #' Interactive Visualization of Topological Constraints
 #'
 #' Visualizes the reduced dimension plot with overlaid user constraints.
@@ -36,23 +41,12 @@ plot_constraints_interactive <- function(reduced_dim, cluster_labels, constraint
     ggplot2::labs(title = "Trajectory Constraints Map")
 
   if (!is.null(constraints)) {
-    required_columns <- c("from", "to", "type")
-    if (!is.data.frame(constraints) || !all(required_columns %in% names(constraints))) {
-      stop("'constraints' must be a data.frame with columns 'from', 'to', and 'type'.")
-    }
-
+    rules <- .tc_rules(constraints, rownames(centroids))
     constraint_data <- data.frame(
-      from = as.character(constraints$from),
-      to = as.character(constraints$to),
-      type = as.character(constraints$type),
-      stringsAsFactors = FALSE
+      from = rownames(centroids)[rules$i],
+      to = rownames(centroids)[rules$j],
+      type = rules$type
     )
-    constraint_data <- constraint_data[
-      constraint_data$type %in% c("must_link", "cannot_link") &
-        constraint_data$from %in% rownames(centroids) &
-        constraint_data$to %in% rownames(centroids),
-      , drop = FALSE
-    ]
 
     if (nrow(constraint_data)) {
       segment_data <- data.frame(
@@ -69,7 +63,6 @@ plot_constraints_interactive <- function(reduced_dim, cluster_labels, constraint
         p <- p + ggplot2::geom_segment(
           data = must_link_data,
           ggplot2::aes(x = x, y = y, xend = xend, yend = yend),
-          arrow = ggplot2::arrow(length = ggplot2::unit(0.03, "npc")),
           color = "darkgreen", linewidth = 1.2
         )
       }

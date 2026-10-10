@@ -1,22 +1,27 @@
 Package: TConstrain
 Title: Topology-Constrained Trajectory Inference
-Version: 0.0.0.9000
-Authors@R: 
+Version: 0.1.0
+Authors@R:
     person("Xianzhe", "Hu", email = "xianzhe88888@gmail.com", role = c("aut", "cre"))
-Description: Constructs topology-constrained minimum spanning trees from
-    cluster centroids for semi-supervised single-cell trajectory inference.
-    Supports hard must-link and cannot-link relationships, plus soft priors
-    including symmetric penalties for edges between different known time labels.
+Description: Constructs cluster-level trajectory trees with exact topological
+    constraints or a normalized probabilistic model. Gaussian coordinate
+    likelihoods and edge-factorized tree priors yield maximum a posteriori
+    trees, exact edge marginals and conditional model evidence using the
+    matrix-tree theorem. Supports independent temporal gap supervision and
+    auditable hard and soft rules for single-cell topology exploration.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.3
-Imports: 
+Imports:
     ggplot2,
     igraph,
     plotly,
-    stats
-Suggests: 
+    stats,
+    utils
+Suggests:
     knitr,
-    rmarkdown
+    rmarkdown,
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
 VignetteBuilder: knitr
+Config/roxygen2/version: 8.1.0

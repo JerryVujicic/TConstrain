@@ -2,7 +2,7 @@
 % Please edit documentation in R/core_functions.R
 \name{get_constrained_mst}
 \alias{get_constrained_mst}
-\title{Compute Constrained Minimum Spanning Tree}
+\title{Construct a hard-constrained MST or a posterior MAP tree}
 \usage{
 get_constrained_mst(
   centroids,
@@ -10,27 +10,52 @@ get_constrained_mst(
   time_labels = NULL,
   probabilistic = FALSE,
   prior_strength = 10,
-  small_eps = 1e-8,
-  large_value = 1e12,
-  return_format = c("igraph", "edgelist")
+  small_eps = 1e-08,
+  large_value = 1e+12,
+  return_format = c("igraph", "edgelist"),
+  likelihood_scale = 1,
+  time_strength = 0,
+  time_scale = 1,
+  hard_constraints = NULL
 )
 }
 \arguments{
-\item{centroids}{A numeric matrix or data.frame/tibble of cluster centroids. Row names are cluster IDs.}
-\item{constraints}{Optional data.frame with columns \code{from}, \code{to}, and \code{type}.}
-\item{time_labels}{Optional named numeric vector. Edges between clusters with different known time labels receive a symmetric penalty.}
-\item{probabilistic}{Logical. If TRUE, constraints and temporal penalties are soft priors; otherwise constraints are hard rules and temporal penalties remain finite.}
-\item{prior_strength}{Numeric strength of the soft prior or base temporal penalty; must be greater than 1. The temporal multiplier is \code{(1 + scale_factor) / 2}, preserving the undirected edge weights used by earlier releases.}
-\item{small_eps}{Finite positive effective distance for hard \code{must_link}.}
-\item{large_value}{Finite positive effective distance for hard \code{cannot_link} and non-finite distances.}
-\item{return_format}{Either \code{"igraph"} or \code{"edgelist"}.}
+\item{centroids}{Numeric coordinates with unique cluster row names.}
+
+\item{constraints}{Data.frame with from, to, type; hard rules when
+probabilistic is FALSE and soft rules otherwise.}
+
+\item{time_labels}{Named numeric times. NA means unknown.}
+
+\item{probabilistic}{Single nonmissing logical. TRUE returns a posterior MAP tree.}
+
+\item{prior_strength}{Finite number >= 1; soft tree-prior weight ratio.}
+
+\item{small_eps}{Deprecated positive finite compatibility argument, ignored.}
+
+\item{large_value}{Deprecated positive finite compatibility argument, ignored.}
+
+\item{return_format}{Either igraph or edgelist. The graph stores audit and
+posterior attributes; the edge list stores these as R attributes.}
+
+\item{likelihood_scale}{Fixed positive Gaussian increment standard deviation.}
+
+\item{time_strength}{Nonnegative absolute time-gap penalty; default 0.}
+
+\item{time_scale}{Positive divisor for time units.}
+
+\item{hard_constraints}{Additional exact constraints, also available in soft mode.}
 }
 \value{
-An igraph object when \code{return_format = "igraph"}, or an edge-list data.frame with \code{from}, \code{to}, and \code{weight} columns when \code{return_format = "edgelist"}.
+An undirected igraph tree or data.frame with from, to and weight.
+The weight is an optimization cost, not pseudotime. In probabilistic mode
+it is the negative edge log posterior weight and may be negative.
+In hard mode it is Euclidean distance plus the temporal penalty.
+Infeasible hard rules produce an error, never an artificial bridge.
 }
 \description{
-Derives an undirected Minimum Spanning Tree from cluster centroids while
-respecting user-defined topological constraints and optional symmetric temporal
-penalties. Time labels discourage edges between different known time points;
-they do not orient edges.
+Hard mode enforces feasible rules exactly. Probabilistic mode uses the
+normalized Gaussian tree model in fit_tree_posterior, replacing the historical
+distance-multiplier heuristic. Time supervision is an independent, symmetric
+absolute-gap penalty and never orients edges.
 }

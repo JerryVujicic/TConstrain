@@ -2,7 +2,7 @@
 % Please edit documentation in R/core_functions.R
 \name{get_constrained_mst_tidy}
 \alias{get_constrained_mst_tidy}
-\title{Tidy Wrapper for Constrained Minimum Spanning Tree}
+\title{Construct a constrained tree from a data frame of centroids}
 \usage{
 get_constrained_mst_tidy(
   data,
@@ -11,21 +11,47 @@ get_constrained_mst_tidy(
   time_labels = NULL,
   probabilistic = FALSE,
   prior_strength = 10,
-  small_eps = 1e-8,
-  large_value = 1e12,
-  return_format = c("igraph", "edgelist")
+  small_eps = 1e-08,
+  large_value = 1e+12,
+  return_format = c("igraph", "edgelist"),
+  likelihood_scale = 1,
+  time_strength = 0,
+  time_scale = 1,
+  hard_constraints = NULL
 )
 }
 \arguments{
-\item{data}{A data.frame or tibble containing centroid coordinates and an ID column.}
-\item{id_col}{Name of the column containing cluster IDs.}
-\item{constraints}{Optional topological constraints.}
-\item{time_labels}{Optional named numeric time labels. Different known labels receive a symmetric edge penalty.}
-\item{probabilistic}{Logical selecting soft or hard constraint handling.}
-\item{prior_strength}{Strength of soft priors or the base temporal penalty.}
-\item{small_eps}{Effective distance for hard \code{must_link} constraints.}
-\item{large_value}{Effective distance for hard \code{cannot_link} constraints.}
-\item{return_format}{Either \code{"igraph"} or \code{"edgelist"}.}
+\item{data}{Data.frame containing an ID column and numeric coordinates only.}
+
+\item{id_col}{Name of the cluster ID column.}
+
+\item{constraints}{Data.frame with from, to, type; hard rules when
+probabilistic is FALSE and soft rules otherwise.}
+
+\item{time_labels}{Named numeric times. NA means unknown.}
+
+\item{probabilistic}{Single nonmissing logical. TRUE returns a posterior MAP tree.}
+
+\item{prior_strength}{Finite number >= 1; soft tree-prior weight ratio.}
+
+\item{small_eps}{Deprecated positive finite compatibility argument, ignored.}
+
+\item{large_value}{Deprecated positive finite compatibility argument, ignored.}
+
+\item{return_format}{Either igraph or edgelist. The graph stores audit and
+posterior attributes; the edge list stores these as R attributes.}
+
+\item{likelihood_scale}{Fixed positive Gaussian increment standard deviation.}
+
+\item{time_strength}{Nonnegative absolute time-gap penalty; default 0.}
+
+\item{time_scale}{Positive divisor for time units.}
+
+\item{hard_constraints}{Additional exact constraints, also available in soft mode.}
 }
-\value{An igraph object or an edge-list data.frame, depending on \code{return_format}.}
-\description{Converts an ID column into row names and delegates constrained MST construction to \code{get_constrained_mst}.}
+\value{
+An igraph tree or edge data.frame, as in get_constrained_mst.
+}
+\description{
+Construct a constrained tree from a data frame of centroids
+}
