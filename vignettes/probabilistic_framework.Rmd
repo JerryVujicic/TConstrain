@@ -1,0 +1,110 @@
+---
+title: "Normalized inference over cluster trees"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Normalized inference over cluster trees}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+library(TConstrain)
+```
+
+## The observation model
+
+Let $x_i\in\mathbb R^d$ be the observed centroid of cluster $i$. For a tree $T$,
+fix one centroid $x_r$ and orient its edges away from it only to define the
+conditional density. Independently on each edge,
+$x_j\mid x_i,T,\sigma\sim N_d(x_i,\sigma^2 I)$.
+
+$$\log L_T=-\frac{(K-1)d}{2}\log(2\pi\sigma^2)
+-\sum_{(i,j)\in T}\frac{\lVert x_i-x_j\rVert^2}{2\sigma^2}.$$
+
+The map from the non-root coordinates to tree increments has determinant
+magnitude one. Thus the product of Gaussian increments is a normalized density
+on those coordinates, rather than a collection of independent pairwise
+observations on the complete graph. Symmetry makes the numerical score invariant
+to reorienting a fixed tree. This is a centroid coordinate model, not a raw
+scRNA-seq count model. Dimensions and increments are assumed isotropic and
+independent; centroid sampling error and hyperparameter uncertainty are not fitted.
+
+## A normalized prior and posterior
+
+For soft rules define $b_{ij}\in\{-1,0,1\}$, representing cannot-link, neutral
+and must-link. With $s\geq1$, $\alpha\geq0$, and $\tau>0$,
+
+$$a_{ij}=b_{ij}\log s-\alpha\lvert t_i-t_j\rvert/\tau.$$
+
+The time term is zero if either time is unknown. It is also zero by default
+because `time_strength = 0`. These coefficients are specified externally; rules
+selected by inspecting the same coordinates should not be treated as independent
+experimental evidence.
+
+Let $\mathcal T_H$ contain all labeled spanning trees satisfying hard rules.
+Required edges must be acyclic, and allowed edges must connect all clusters.
+
+$$Z_0=\sum_{T\in\mathcal T_H}\exp\left(\sum_{e\in T}a_e\right),\qquad
+p(T\mid H)=\frac{\exp(\sum_{e\in T}a_e)}{Z_0}.$$
+
+With $\ell_e$ the complete edge Gaussian log density,
+
+$$Z_1=\sum_{T\in\mathcal T_H}\exp\left(\sum_{e\in T}(a_e+\ell_e)\right),$$
+$$p(T\mid X,H,\sigma)=\frac{\exp(\sum_{e\in T}(a_e+\ell_e))}{Z_1},\qquad
+\log p(X_{-r}\mid x_r,H,\sigma)=\log Z_1-\log Z_0.$$
+
+Normalizing the prior matters for evidence and comparison of prior strengths,
+even though its normalizer cancels when ranking trees for one fixed prior.
+The evidence is a coordinate density, not a probability of the scientific
+hypothesis. Compare values only with an unchanged observation space and units.
+
+## Exact calculation and audit
+
+Contract the required forest, remove forbidden edges and optional edges internal
+to each contracted component, and keep parallel edges between components.
+For either prior or posterior edge conductances, a reduced weighted Laplacian
+has determinant equal to the sum of tree weight products. Required-edge weight
+products multiply this determinant. For an optional edge, its marginal equals
+its conductance times effective resistance; required and excluded edges have
+probabilities one and zero. This is the matrix-tree calculation for factored
+tree distributions [Meila and Jaakkola, UAI 2000](https://arxiv.org/abs/1301.3875).
+
+The implementation shifts log weights, uses Cholesky factorization and checks
+conditioning, marginal bounds and the expected edge count. Severe underflow or
+ill-conditioning raises an error. No sampling or enumeration is needed for
+inference. Complexity is O(K^3) time for the dense factorization and O(K^2) memory.
+
+```{r}
+x <- rbind(A = c(0, 0), B = c(1, 0), C = c(0, 1))
+fit <- fit_tree_posterior(x, likelihood_scale = 1)
+fit$edges[, c("from", "to", "prior_probability", "posterior_probability")]
+sum(fit$edges$posterior_probability) # K - 1
+score_tree(fit, fit$map)
+```
+
+Edge marginals do not multiply to a tree probability: the spanning-tree
+restriction couples edges. Use `score_tree()` to score an entire candidate.
+Different optimal trees can have equal posterior mass; the MAP routine reports
+one of them, while the normalized posterior includes every supported tree.
+
+## Parameter choice and biological interpretation
+
+`sigma = likelihood_scale` is in embedding units and defaults to 1. It is not
+estimated. When coordinates are multiplied by $c$, multiply sigma by $|c|$ to
+preserve topology probabilities. Reassess sigma after changing dimensions or
+representation. Fix a grid using external evidence, and evaluate predictions on
+withheld donors or biological measurements. Report parameter sensitivity and
+bootstrap stability separately from conditional posterior probabilities.
+
+`prior_strength` changes pairwise preferences; `time_strength` changes time-gap
+preferences. Neither is a marginal probability. Hard rules dominate any soft
+preference on the same pair. Avoid using a rule both to construct a model and to
+claim predictive validation of it. A hard constraint fixing the full tree makes
+the posterior certain by construction.
+
+For B-cell work, distinguish transcriptional states from clonal ancestry and
+from sampling time. The tree describes possible coarse branching topology,
+not repeated GC zone cycling or multi-parent convergence. No cell pseudotime or
+automatic Slingshot integration is implemented. The MAP optimization costs may
+be negative and must not be accumulated as time or length for cell ordering.

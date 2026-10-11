@@ -1,0 +1,4 @@
+"model","long_edge_probability","map_probability","chain_edges_in_map"
+"baseline",0.0341546300837672,0.473017266866581,3
+"correct_rule",0.0232687164231149,0.567074245062436,3
+"incorrect_rule",0.997180113521198,0.252943247239282,2

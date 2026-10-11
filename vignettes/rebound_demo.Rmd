@@ -46,7 +46,7 @@ mock_labels <- rep(c("Day0", "Day3", "Day5", "Day10"), each=25)
 
 # Defining Constraints
 
-We enforce a "Must Link" between Day 0 and Day 3, and a "Cannot Link" between Day 0 and Day 10.
+We favor a "Must Link" between Day 0 and Day 3, and discourage a "Cannot Link" between Day 0 and Day 10.
 
 ```{r}
 cons <- data.frame(
@@ -61,14 +61,16 @@ times <- c(Day0 = 0, Day3 = 3, Day5 = 5, Day10 = 10)
 
 # Probabilistic Inference
 
-We use probabilistic = TRUE to treat these as Bayesian priors. This allows the data to maintain some influence over the final topology.
+We use the normalized Gaussian tree model. The scale of 5 coordinate units and the temporal settings below are illustrative, not fitted biological parameters. Soft rules favor or discourage edges; they do not guarantee them.
 
 ```{r}
 traj <- infer_trajectory(mock_dim, mock_labels, 
                          constraints = cons, 
                          time_labels = times,
                          probabilistic = TRUE, 
-                         prior_strength = 20)
+                         prior_strength = 20,
+                         likelihood_scale = 5,
+                         time_strength = 1, time_scale = 5)
 
 plot(traj$mst, layout=traj$centroids, main="Probabilistic Trajectory")
 ```
@@ -83,7 +85,15 @@ plot(traj$mst, layout=traj$centroids,
      vertex.size=30, vertex.label.color="black")
 ```
 
-The time labels discourage direct links between different observed time points,
-while the cannot-link prior discourages the Day0-to-Day10 shortcut. These are
-undirected penalties; the reported paths are rooted at Day0 because it is the
-unique earliest known time label.
+The time prior penalizes absolute gaps with its own strength. It does not orient
+edges or guarantee a chronological chain. The MAP is one candidate; inspect the
+posterior to see uncertainty across all supported trees.
+
+```{r}
+traj$posterior$map_probability
+traj$posterior$edges[, c("from", "to", "prior_probability", "posterior_probability", "in_map")]
+```
+
+The earlier distance-multiplier example had two equally optimal trees. This
+model changes the objective and reports remaining ambiguity explicitly. Neither
+removing a shortcut nor adding a rule validates the inferred developmental path.

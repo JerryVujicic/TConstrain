@@ -2,13 +2,19 @@
 % Please edit documentation in R/wrappers.R
 \name{get_centroids}
 \alias{get_centroids}
-\title{Get Cluster Centroids from Single-Cell Data}
+\title{Get cluster centroids from single cell coordinates}
 \usage{
 get_centroids(data, labels)
 }
 \arguments{
-\item{data}{A numeric matrix or data.frame of coordinates, with rows representing cells.}
-\item{labels}{A vector of cluster labels corresponding to cells.}
+\item{data}{Numeric finite matrix or data.frame, cells by dimensions.}
+
+\item{labels}{One nonmissing, nonempty cluster label per cell.}
 }
-\value{A matrix of cluster centroids with one row per cluster.}
-\description{Calculates the mean coordinate of each cluster. Cluster labels with numeric suffixes use natural ordering, so \code{C2} precedes \code{C10}.}
+\value{
+A matrix with natural ordering of numeric cluster suffixes. A single
+dimension or a single cluster remains a matrix.
+}
+\description{
+Get cluster centroids from single cell coordinates
+}

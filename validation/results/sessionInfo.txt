@@ -1,0 +1,22 @@
+R version 4.4.3 (2025-02-28)
+Platform: aarch64-apple-darwin20.0.0
+Running under: macOS 26.5.2
+
+Matrix products: default
+BLAS/LAPACK: <R environment>/lib/libopenblas.0.dylib;  LAPACK version 3.12.0
+
+locale:
+[1] C.UTF-8/C.UTF-8/C.UTF-8/C/C.UTF-8/C.UTF-8
+
+time zone: Asia/Shanghai
+tzcode source: system (macOS)
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] TConstrain_0.1.0
+
+loaded via a namespace (and not attached):
+[1] compiler_4.4.3  magrittr_2.0.5  cli_3.6.6       tools_4.4.3    
+[5] igraph_2.3.4    lifecycle_1.0.5 pkgconfig_2.0.3 rlang_1.3.0    
