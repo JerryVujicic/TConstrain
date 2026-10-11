@@ -34,11 +34,3 @@ fit$edges[, c("from", "to", "posterior_probability")]
 `likelihood_scale` is a fixed standard deviation in coordinate units, not an
 estimated parameter. See the usage guide for choosing settings and interpreting
 probabilities.
-
-## Documentation
-
-- [Usage guide](docs/usage.md): inputs, constraints, time labels, outputs and migration.
-- [Probabilistic framework](vignettes/probabilistic_framework.Rmd): likelihood, prior, posterior and assumptions.
-- [Rebound example](vignettes/rebound_demo.Rmd): an illustrated trajectory analysis.
-- [Validation report](validation/REPORT.md): tests, simulations and remaining limitations.
-- [Release notes](NEWS.md): changes in version 0.1.0.
