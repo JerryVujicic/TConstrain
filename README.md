@@ -122,15 +122,6 @@ tests. `Rscript validation/run_validation.R` reproduces the rebound analysis,
 prior sensitivity and a Gaussian-model simulation study. See
 [the validation report](validation/REPORT.md) and
 [the framework vignette](vignettes/probabilistic_framework.Rmd).
-GitHub Actions runs R package checks on pushes and pull requests.
-
-The dense implementation uses O(K^2) memory and O(K^3) linear algebra for K
-clusters. Underflow or ill-conditioned normalizers cause informative errors,
-not silently truncated probabilities. For uncertain or poorly specified
-geometry, inspect sensitivity across embeddings, clusters, donors and model
-parameters. Posterior certainty under this model does not establish biological
-correctness. Shared BCR clonotype is not a direct adjacency observation; reserve
-independent lineage/time/functional measurements for evaluation.
 
 The factorized-tree normalization follows the matrix-tree framework described
 by [Meila and Jaakkola (UAI 2000)](https://arxiv.org/abs/1301.3875).
